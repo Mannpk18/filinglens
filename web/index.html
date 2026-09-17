@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FilingLens — EDGAR / XBRL Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f7f8f3;
+    --bar: #e3f0e1;
+    --ink: #1f2a24;
+    --ink-faint: #5c6b62;
+    --rule: #b7c9bc;
+    --stamp: #b33a2e;
+    --stamp-warn: #a9781f;
+  }
+  * { box-sizing: border-box; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+  html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", sans-serif;
+  }
+  body {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      var(--paper) 0px, var(--paper) 34px,
+      var(--bar) 34px, var(--bar) 68px
+    );
+    min-height: 100vh;
+  }
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    top: 0; bottom: 0;
+    width: 22px;
+    background-image: radial-gradient(circle, var(--rule) 3px, transparent 3.5px);
+    background-size: 100% 26px;
+    background-position: center 8px;
+    opacity: 0.55;
+    z-index: 0;
+  }
+  body::before { left: 0; }
+  body::after { right: 0; }
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px 40px 100px;
+  }
+  .masthead {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 18px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .masthead h1 {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+  .masthead .tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border: 1px solid var(--rule);
+    padding: 4px 8px;
+  }
+  .thesis {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 14px;
+    color: var(--ink-faint);
+    margin: 14px 0 36px;
+    line-height: 1.6;
+  }
+  .thesis strong { color: var(--ink); font-weight: 600; }
+  .intake {
+    border: 1.5px solid var(--ink);
+    background: rgba(255,255,255,0.5);
+    padding: 22px 24px;
+    margin-bottom: 40px;
+  }
+  .field-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 5px;
+  }
+  .row { display: flex; gap: 14px; margin-bottom: 16px; }
+  .row .field { flex: 1; }
+  .row .field.ticker { flex: 0 0 110px; }
+  input, textarea {
+    width: 100%;
+    background: var(--paper);
+    border: none;
+    border-bottom: 1.5px solid var(--rule);
+    color: var(--ink);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 15px;
+    padding: 8px 2px;
+  }
+  input:focus, textarea:focus {
+    outline: none;
+    border-bottom-color: var(--stamp);
+  }
+  #ticker { text-transform: uppercase; letter-spacing: 0.06em; }
+  #question {
+    font-family: "IBM Plex Sans", sans-serif;
+    resize: vertical;
+    min-height: 56px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 10px 12px;
+  }
+  #question:focus { border-color: var(--stamp); }
+  .submit-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  button#submit {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 11px 26px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button#submit:hover:not(:disabled) { background: var(--stamp); }
+  button#submit:disabled { opacity: 0.45; cursor: default; }
+  .examples { display: flex; gap: 8px; flex-wrap: wrap; }
+  .example-chip {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    border: 1px dashed var(--rule);
+    padding: 5px 10px;
+    cursor: pointer;
+    background: transparent;
+  }
+  .example-chip:hover { border-color: var(--ink); color: var(--ink); }
+  .server-hint {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 14px;
+    line-height: 1.6;
+  }
+  .server-hint code { color: var(--ink); }
+  .ledger-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 10px;
+  }
+  .ledger-header::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid var(--rule);
+  }
+  .results { display: flex; flex-direction: column; }
+  .entry {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 4px 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .entry .row-num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    color: var(--ink-faint);
+    padding-top: 2px;
+  }
+  .entry-body { min-width: 0; }
+  .entry-question {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .entry-question .qmeta { color: var(--ink); }
+  .entry-answer {
+    font-size: 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    margin-bottom: 12px;
+  }
+  .loading {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .loading .caret {
+    width: 8px; height: 14px;
+    background: var(--stamp);
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .meta-line {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border: 2.5px solid currentColor;
+    border-radius: 3px;
+    position: relative;
+    transform: rotate(-4deg);
+    animation: stamp-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .stamp::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border: 1px solid currentColor;
+    border-radius: 1px;
+    opacity: 0.6;
+  }
+  .stamp.ok { color: #2f7d4f; }
+  .stamp.warn { color: var(--stamp-warn); }
+  @keyframes stamp-in {
+    0% { transform: rotate(-4deg) scale(2.2); opacity: 0; }
+    60% { transform: rotate(-4deg) scale(0.94); opacity: 1; }
+    100% { transform: rotate(-4deg) scale(1); opacity: 1; }
+  }
+  .citations {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 10px;
+  }
+  .citations code {
+    background: var(--bar);
+    padding: 1px 6px;
+    border-radius: 2px;
+    margin-right: 5px;
+    color: var(--ink);
+  }
+  .error {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--stamp);
+  }
+  .empty-state {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    padding: 20px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  @media (max-width: 560px) {
+    .page { padding: 36px 24px 80px; }
+    .row { flex-direction: column; }
+    .row .field.ticker { flex: 1; }
+    .masthead h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="masthead">
+    <h1>FilingLens</h1>
+    <span class="tag">EDGAR / XBRL Ledger</span>
+  </div>
+  <p class="thesis">Every figure traced to a <strong>filed source</strong>. Every claim <strong>checked</strong> before it ships -- narrative against retrieved text, numbers against structured XBRL data. Unverified claims are flagged, never hidden.</p>
+
+  <div class="intake">
+    <div class="row">
+      <div class="field ticker">
+        <label class="field-label" for="ticker">Ticker</label>
+        <input id="ticker" value="AAPL" maxlength="6">
+      </div>
+      <div class="field">
+        <label class="field-label" for="years">Fiscal year(s)</label>
+        <input id="years" value="2024" placeholder="e.g. 2022,2023,2024">
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:16px;">
+      <label class="field-label" for="question">Question</label>
+      <textarea id="question" placeholder="What was Apple's net income in fiscal year 2024?"></textarea>
+    </div>
+    <div class="submit-row">
+      <button id="submit">Ask</button>
+      <div class="examples">
+        <button class="example-chip" data-q="What was Apple's net income in fiscal year 2024?" data-y="2024">net income FY24</button>
+        <button class="example-chip" data-q="What supply chain risks does Apple's most recent 10-K disclose?" data-y="2024">supply chain risks</button>
+        <button class="example-chip" data-q="Did Apple's R&D spend growth over the last 3 years align with what management said about R&D priorities in the most recent 10-K?" data-y="2022,2023,2024">R&amp;D vs MD&amp;A (hard)</button>
+      </div>
+    </div>
+    <p class="server-hint">Expects the FilingLens API at <code>http://localhost:8000</code>. Narrative/comparative questions can take several minutes on local CPU inference.</p>
+  </div>
+
+  <div class="ledger-header">Session ledger</div>
+  <div class="results" id="results">
+    <div class="empty-state" id="empty-state">No entries yet -- ask a question above to open the ledger.</div>
+  </div>
+
+</div>
+
+<script>
+const API_URL = "http://localhost:8000/query";
+let entryCount = 0;
+
+document.querySelectorAll(".example-chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    document.getElementById("question").value = chip.dataset.q;
+    document.getElementById("years").value = chip.dataset.y;
+  });
+});
+
+document.getElementById("submit").addEventListener("click", async () => {
+  const question = document.getElementById("question").value.trim();
+  const ticker = document.getElementById("ticker").value.trim().toUpperCase();
+  const yearsRaw = document.getElementById("years").value.trim();
+  if (!question) return;
+
+  const fiscal_years = yearsRaw
+    ? yearsRaw.split(",").map(y => parseInt(y.trim(), 10)).filter(y => !isNaN(y))
+    : null;
+
+  const emptyState = document.getElementById("empty-state");
+  if (emptyState) emptyState.remove();
+
+  const btn = document.getElementById("submit");
+  btn.disabled = true;
+  btn.textContent = "Asking...";
+
+  entryCount += 1;
+  const rowNum = String(entryCount).padStart(3, "0");
+  const metaTag = `${ticker ? ticker : ""}${fiscal_years ? " . FY" + fiscal_years.join(",") : ""}`;
+
+  const resultsDiv = document.getElementById("results");
+  const entry = document.createElement("div");
+  entry.className = "entry";
+  entry.innerHTML = `
+    <div class="row-num">${rowNum}</div>
+    <div class="entry-body">
+      <div class="entry-question">${escapeHtml(question)} <span class="qmeta">${escapeHtml(metaTag)}</span></div>
+      <div class="loading"><span class="caret"></span>routing -> retrieval/table -> reasoning -> verifier -> writer...</div>
+    </div>
+  `;
+  resultsDiv.prepend(entry);
+
+  try {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, ticker: ticker || null, fiscal_years }),
+    });
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Server returned ${resp.status}: ${text.slice(0, 300)}`);
+    }
+
+    const data = await resp.json();
+    const passed = data.verification_passed;
+    const stampClass = passed ? "ok" : "warn";
+    const stampText = passed ? "Verified" : "Unverified";
+
+    const body = entry.querySelector(".entry-body");
+    body.innerHTML = `
+      <div class="entry-question">${escapeHtml(question)} <span class="qmeta">${escapeHtml(metaTag)}</span></div>
+      <div class="entry-answer">${escapeHtml(data.answer)}</div>
+      <div class="meta-line">
+        <span class="stamp ${stampClass}">${stampText}</span>
+        <span>confidence ${data.overall_confidence.toFixed(2)}</span>
+        <span>retries ${data.retry_count}</span>
+      </div>
+      ${data.citations && data.citations.length ? `<div class="citations">sources: ${data.citations.map(c => `<code>${escapeHtml(c)}</code>`).join(" ")}</div>` : ""}
+    `;
+  } catch (err) {
+    const body = entry.querySelector(".entry-body");
+    body.innerHTML = `
+      <div class="entry-question">${escapeHtml(question)} <span class="qmeta">${escapeHtml(metaTag)}</span></div>
+      <div class="error">Request failed: ${escapeHtml(err.message)}. Is the FilingLens server running at localhost:8000?</div>
+    `;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Ask";
+  }
+});
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+</body>
+</html>

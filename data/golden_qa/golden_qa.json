@@ -1,0 +1,92 @@
+[
+  {
+    "id": "aapl_rd_pct_revenue_3yr",
+    "question": "How has Apple's R&D spend as a percentage of revenue changed over the last 3 fiscal years?",
+    "ticker": "AAPL",
+    "fiscal_years": [2022, 2023, 2024],
+    "category": "numeric",
+    "ground_truth_answer": "REPLACE ME: fill in after checking Apple's actual 10-K figures for FY2022-2024 R&D expense and total revenue.",
+    "ground_truth_contexts": ["us-gaap:ResearchAndDevelopmentExpense", "us-gaap:Revenues"]
+  },
+  {
+    "id": "aapl_supply_chain_risk",
+    "question": "What supply chain risks does Apple's most recent 10-K disclose?",
+    "ticker": "AAPL",
+    "fiscal_years": [2024],
+    "category": "narrative",
+    "ground_truth_answer": "REPLACE ME: fill in after reading the actual Item 1A Risk Factors section.",
+    "ground_truth_contexts": ["Item 1A. Risk Factors"]
+  },
+  {
+    "id": "aapl_rd_growth_vs_narrative",
+    "question": "Did Apple's R&D spend growth over the last 3 years align with what management said about R&D priorities in the most recent 10-K?",
+    "ticker": "AAPL",
+    "fiscal_years": [2022, 2023, 2024],
+    "category": "comparative",
+    "ground_truth_answer": "REPLACE ME: requires cross-referencing R&D expense trend against MD&A commentary.",
+    "ground_truth_contexts": ["us-gaap:ResearchAndDevelopmentExpense", "Item 7. Management Discussion and Analysis"]
+  },
+  {
+    "id": "aapl_net_income_fy2024",
+    "question": "What was Apple's net income in fiscal year 2024?",
+    "ticker": "AAPL",
+    "fiscal_years": [2024],
+    "category": "numeric",
+    "ground_truth_answer": "REPLACE ME: single XBRL lookup, easiest example to sanity-check your pipeline end to end first.",
+    "ground_truth_contexts": ["us-gaap:NetIncomeLoss"]
+  },
+  {
+    "id": "aapl_gross_margin_trend",
+    "question": "How has Apple's gross profit margin trended over the last 3 fiscal years?",
+    "ticker": "AAPL",
+    "fiscal_years": [2022, 2023, 2024],
+    "category": "numeric",
+    "ground_truth_answer": "REPLACE ME: gross_profit / revenue per year.",
+    "ground_truth_contexts": ["us-gaap:GrossProfit", "us-gaap:Revenues"]
+  },
+  {
+    "id": "aapl_litigation_disclosures",
+    "question": "What legal proceedings or litigation does Apple's most recent 10-K disclose?",
+    "ticker": "AAPL",
+    "fiscal_years": [2024],
+    "category": "narrative",
+    "ground_truth_answer": "REPLACE ME: check Item 3 Legal Proceedings, may be incorporated by reference from a note.",
+    "ground_truth_contexts": ["Item 3. Legal Proceedings"]
+  },
+  {
+    "id": "aapl_sga_vs_revenue_growth",
+    "question": "Has Apple's SG&A expense grown faster or slower than its revenue over the last 3 fiscal years?",
+    "ticker": "AAPL",
+    "fiscal_years": [2022, 2023, 2024],
+    "category": "numeric",
+    "ground_truth_answer": "REPLACE ME: compute YoY growth rate of both series and compare.",
+    "ground_truth_contexts": ["us-gaap:SellingGeneralAndAdministrativeExpense", "us-gaap:Revenues"]
+  },
+  {
+    "id": "aapl_competition_disclosure",
+    "question": "How does Apple describe the competitive landscape it operates in, according to its most recent 10-K?",
+    "ticker": "AAPL",
+    "fiscal_years": [2024],
+    "category": "narrative",
+    "ground_truth_answer": "REPLACE ME: usually near the start of Item 1 Business.",
+    "ground_truth_contexts": ["Item 1. Business"]
+  },
+  {
+    "id": "aapl_rd_vs_opex_priorities",
+    "question": "Between R&D and SG&A, which expense category grew faster over the last 3 years, and does that match what management describes as investment priorities in the MD&A?",
+    "ticker": "AAPL",
+    "fiscal_years": [2022, 2023, 2024],
+    "category": "comparative",
+    "ground_truth_answer": "REPLACE ME: hardest example in this set, deliberately -- good stress test for the multi-agent fan-out.",
+    "ground_truth_contexts": ["us-gaap:ResearchAndDevelopmentExpense", "us-gaap:SellingGeneralAndAdministrativeExpense", "Item 7. Management Discussion and Analysis"]
+  },
+  {
+    "id": "aapl_total_assets_fy2024",
+    "question": "What were Apple's total assets at the end of fiscal year 2024?",
+    "ticker": "AAPL",
+    "fiscal_years": [2024],
+    "category": "numeric",
+    "ground_truth_answer": "REPLACE ME: single XBRL lookup on us-gaap:Assets.",
+    "ground_truth_contexts": ["us-gaap:Assets"]
+  }
+]

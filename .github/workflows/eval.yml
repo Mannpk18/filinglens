@@ -1,0 +1,49 @@
+name: Eval Suite Gate
+
+# Runs the golden-dataset eval suite on every PR touching prompts, agent logic,
+# or retrieval code, and fails the build if pass_rate or numeric_accuracy drops
+# below the thresholds. This is the CI discipline piece — same pattern used on
+# IncidentSim's pytest suite, applied to LLM output quality instead of code
+# correctness.
+
+on:
+  pull_request:
+    paths:
+      - "src/agents/**"
+      - "src/retrieval/**"
+      - "src/data/**"
+      - "data/golden_qa/**"
+  workflow_dispatch:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: pytest tests/ -v
+
+      - name: Run eval suite
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          python -m src.eval.run_eval \
+            --dataset data/golden_qa/golden_qa.json \
+            --min-pass-rate 0.85 \
+            --min-numeric-accuracy 0.95
+
+      - name: Upload eval results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: eval_runs/
